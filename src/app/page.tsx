@@ -1,15 +1,5 @@
-import { Suspense } from "react";
-import {
-  MarketOverview,
-  MarketOverviewSkeleton,
-} from "@/components/market-overview";
-import { MarketIndex } from "@/types";
-
-const MarketOverviewRenderer = async () => {
-  const resp = await fetch("http://localhost:3000/api/market/overview");
-  const data = (await resp.json()) as MarketIndex[];
-  return <MarketOverview data={data} />;
-};
+import StocksList from "@/components/stocks-list";
+import WatchList from "@/components/watch-list";
 
 export default function Page() {
   return (
@@ -17,17 +7,13 @@ export default function Page() {
       <div className="container mx-auto px-4 py-6">
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
           <div className="xl:col-span-3 space-y-6">
-            <Suspense fallback={<MarketOverviewSkeleton />}>
-              <MarketOverviewRenderer />
-            </Suspense>
-
-            {/* Stock Detail Panel */}
-            {/* <StockDetailPanel /> */}
+            <StocksList />
           </div>
 
-          {/* Sidebar - Watchlist */}
           <div className="xl:col-span-1">
-            <div className="sticky top-24">hi</div>
+            <div className="sticky top-2">
+              <WatchList />
+            </div>
           </div>
         </div>
       </div>
