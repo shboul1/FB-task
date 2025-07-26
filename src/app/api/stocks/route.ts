@@ -1,5 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import type { StockItem } from "@/types";
+import Fuse from "fuse.js";
+import { fuseConfig } from "@/lib/fues-config";
 
 const MOCK_SEARCH_RESULTS: StockItem[] = [
   {
@@ -80,9 +82,17 @@ const MOCK_SEARCH_RESULTS: StockItem[] = [
   },
 ];
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const randomizedResultNumbers = MOCK_SEARCH_RESULTS.map((item) => ({
+    const { searchParams } = new URL(request.url);
+    const q = searchParams.get("q") || "";
+    let results = MOCK_SEARCH_RESULTS;
+    if (q) {
+      const fuse = new Fuse(MOCK_SEARCH_RESULTS, fuseConfig);
+      const searchResults = fuse.search(q);
+      results = searchResults.slice(0, 10).map((result) => result.item);
+    }
+    const randomizedResultNumbers = results.map((item) => ({
       ...item,
       price: Math.random() * 1000,
       change: Math.random() * 20 - 10,

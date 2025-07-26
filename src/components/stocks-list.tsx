@@ -19,10 +19,8 @@ import {
   formatPrice,
   formatVolume,
 } from "@/lib/utils";
-import { useMemo } from "react";
-import { fuseConfig } from "@/lib/fues-config";
+import { useState, useEffect } from "react";
 import { useQueryState } from "nuqs";
-import Fuse from "fuse.js";
 import { Input } from "./ui/input";
 import { Eye, Plus, Search, X } from "lucide-react";
 import { Button } from "./ui/button";
@@ -31,6 +29,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import debounce from "lodash.debounce";
 
 type StockItemWithDetails = StockItem & {
   price: number;
@@ -41,14 +40,29 @@ type StockItemWithDetails = StockItem & {
 
 export default function StocksList() {
   const [q, setQ] = useQueryState("q", { defaultValue: "" });
+  const [debouncedQ, setDebouncedQ] = useState(q);
+
+  useEffect(() => {
+    const handler = debounce((value: string) => {
+      setDebouncedQ(value);
+    }, 300);
+    handler(q);
+    return () => {
+      handler.cancel();
+    };
+  }, [q]);
+
   const {
     data: stocks,
     isPending,
     error,
   } = useQuery({
-    queryKey: ["stocks"],
+    queryKey: ["stocks", { debouncedQ }],
     queryFn: async () => {
-      const response = await fetch("/api/stocks");
+      const url = debouncedQ
+        ? `/api/stocks?q=${encodeURIComponent(debouncedQ)}`
+        : "/api/stocks";
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error("Failed to fetch stocks data");
       }
@@ -56,36 +70,6 @@ export default function StocksList() {
     },
     refetchInterval: 3000,
   });
-
-  const filteredData = useMemo(() => {
-    if (!stocks || stocks.length === 0) return [];
-    if (!q) return stocks;
-    const fuse = new Fuse(stocks, fuseConfig);
-    const searchResults = fuse.search(q);
-    const results = searchResults
-      .slice(0, 10)
-      .map((result) => ({
-        ...result.item,
-        score: result.score,
-      }))
-      .sort((a, b) => a.score! - b.score!);
-    return results;
-  }, [stocks, q]);
-
-  if (isPending) {
-    return (
-      <Card className="p-6">
-        <div className="space-y-4">
-          <Skeleton className="h-8 w-48" />
-          <div className="space-y-2">
-            {Array.from({ length: 10 }).map((_, i) => (
-              <Skeleton key={i} className="h-12 w-full" />
-            ))}
-          </div>
-        </div>
-      </Card>
-    );
-  }
 
   if (error) {
     return (
@@ -133,64 +117,75 @@ export default function StocksList() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredData.map((stock, index) => (
-              <TableRow
-                key={`${stock.symbol}-${index}`}
-                className="hover:bg-transparent"
-              >
-                <TableCell className="font-mono font-semibold">
-                  {stock.symbol}
-                </TableCell>
-                <TableCell className="max-w-xs truncate">
-                  {stock.name}
-                </TableCell>
-                <TableCell className="text-right font-semibold">
-                  {formatPrice(stock.price)}
-                </TableCell>
-                <TableCell className="text-right">
-                  {formatChange(stock.change)}
-                </TableCell>
-                <TableCell className="text-right">
-                  <Badge
-                    variant={
-                      stock.changePercent >= 0 ? "default" : "destructive"
-                    }
-                    className={`${
-                      stock.changePercent >= 0
-                        ? "bg-green-100 text-green-800 hover:bg-green-100"
-                        : "bg-red-100 text-red-800 hover:bg-red-100"
-                    }`}
-                  >
-                    {formatChangePercent(stock.changePercent)}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right text-gray-600 font-mono">
-                  {formatVolume(stock.volume)}
-                </TableCell>
-                <TableCell className="text-right text-gray-600 font-mono space-x-2">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button size="icon" variant="outline">
-                        <Plus />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Add to watchlist</p>
-                    </TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button size="icon" variant="outline">
-                        <Eye />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>View Details</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TableCell>
-              </TableRow>
-            ))}
+            {isPending
+              ? new Array(5).fill(null).map((_, index) => (
+                  <TableRow key={index}>
+                    {new Array(6).fill(null).map((_, cellIndex) => (
+                      <TableCell key={cellIndex}>
+                        <Skeleton className="h-4 w-full" />
+                      </TableCell>
+                    ))}
+                    <TableCell className="flex items-center gap-2 justify-end">
+                      <Skeleton className="h-9 w-9 rounded-full" />
+                      <Skeleton className="h-9 w-9 rounded-full" />
+                    </TableCell>
+                  </TableRow>
+                ))
+              : stocks?.map((stock, index) => (
+                  <TableRow key={`${stock.symbol}-${index}`}>
+                    <TableCell className="font-mono font-semibold">
+                      {stock.symbol}
+                    </TableCell>
+                    <TableCell className="max-w-xs truncate">
+                      {stock.name}
+                    </TableCell>
+                    <TableCell className="text-right font-semibold">
+                      {formatPrice(stock.price)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatChange(stock.change)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Badge
+                        variant={
+                          stock.changePercent >= 0 ? "default" : "destructive"
+                        }
+                        className={`${
+                          stock.changePercent >= 0
+                            ? "bg-green-100 text-green-800 hover:bg-green-100"
+                            : "bg-red-100 text-red-800 hover:bg-red-100"
+                        }`}
+                      >
+                        {formatChangePercent(stock.changePercent)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right text-gray-600 font-mono">
+                      {formatVolume(stock.volume)}
+                    </TableCell>
+                    <TableCell className="space-x-2 text-right">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button size="icon" variant="outline">
+                            <Plus />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Add to watchlist</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button size="icon" variant="outline">
+                            <Eye />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>View Details</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                ))}
           </TableBody>
         </Table>
       </CardContent>
