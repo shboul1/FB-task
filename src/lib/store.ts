@@ -1,10 +1,10 @@
-import { StockQuote } from "@/types";
+import { StockItem } from "@/types";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 interface StockStore {
-  watchlist: StockQuote[];
-  addToWatchlist: (stock: StockQuote) => void;
+  watchlist: StockItem[];
+  addToWatchlist: (stock: StockItem) => void;
   removeFromWatchlist: (symbol: string) => void;
 }
 

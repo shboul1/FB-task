@@ -22,7 +22,7 @@ import {
 import { useState, useEffect } from "react";
 import { useQueryState } from "nuqs";
 import { Input } from "./ui/input";
-import { Eye, Plus, Search, X } from "lucide-react";
+import { Eye, Plus, Search, Star, X } from "lucide-react";
 import { Button } from "./ui/button";
 import {
   Tooltip,
@@ -30,6 +30,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import debounce from "lodash.debounce";
+import { useStockStore } from "@/lib/store";
 
 type StockItemWithDetails = StockItem & {
   price: number;
@@ -41,6 +42,7 @@ type StockItemWithDetails = StockItem & {
 export default function StocksList() {
   const [q, setQ] = useQueryState("q", { defaultValue: "" });
   const [debouncedQ, setDebouncedQ] = useState(q);
+  const { addToWatchlist, watchlist, removeFromWatchlist } = useStockStore();
 
   useEffect(() => {
     const handler = debounce((value: string) => {
@@ -68,7 +70,6 @@ export default function StocksList() {
       }
       return response.json() as Promise<StockItemWithDetails[]>;
     },
-    refetchInterval: 3000,
   });
 
   if (error) {
@@ -131,61 +132,82 @@ export default function StocksList() {
                     </TableCell>
                   </TableRow>
                 ))
-              : stocks?.map((stock, index) => (
-                  <TableRow key={`${stock.symbol}-${index}`}>
-                    <TableCell className="font-mono font-semibold">
-                      {stock.symbol}
-                    </TableCell>
-                    <TableCell className="max-w-xs truncate">
-                      {stock.name}
-                    </TableCell>
-                    <TableCell className="text-right font-semibold">
-                      {formatPrice(stock.price)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {formatChange(stock.change)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Badge
-                        variant={
-                          stock.changePercent >= 0 ? "default" : "destructive"
-                        }
-                        className={`${
-                          stock.changePercent >= 0
-                            ? "bg-green-100 text-green-800 hover:bg-green-100"
-                            : "bg-red-100 text-red-800 hover:bg-red-100"
-                        }`}
-                      >
-                        {formatChangePercent(stock.changePercent)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right text-gray-600 font-mono">
-                      {formatVolume(stock.volume)}
-                    </TableCell>
-                    <TableCell className="space-x-2 text-right">
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button size="icon" variant="outline">
-                            <Plus />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Add to watchlist</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button size="icon" variant="outline">
-                            <Eye />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>View Details</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                ))}
+              : stocks?.map((stock, index) => {
+                  const isInWatchlist = watchlist.some(
+                    (item) => item.symbol === stock.symbol
+                  );
+                  return (
+                    <TableRow key={`${stock.symbol}-${index}`}>
+                      <TableCell className="font-mono font-semibold">
+                        {stock.symbol}
+                      </TableCell>
+                      <TableCell className="max-w-xs truncate">
+                        {stock.name}
+                      </TableCell>
+                      <TableCell className="text-right font-semibold">
+                        {formatPrice(stock.price)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {formatChange(stock.change)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Badge
+                          variant={
+                            stock.changePercent >= 0 ? "default" : "destructive"
+                          }
+                          className={`${
+                            stock.changePercent >= 0
+                              ? "bg-green-100 text-green-800 hover:bg-green-100"
+                              : "bg-red-100 text-red-800 hover:bg-red-100"
+                          }`}
+                        >
+                          {formatChangePercent(stock.changePercent)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right text-gray-600 font-mono">
+                        {formatVolume(stock.volume)}
+                      </TableCell>
+                      <TableCell className="space-x-2 text-right">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            {isInWatchlist ? (
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                onClick={() =>
+                                  removeFromWatchlist(stock.symbol)
+                                }
+                              >
+                                <Star className="text-yellow-500" />
+                              </Button>
+                            ) : (
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                onClick={() => addToWatchlist(stock)}
+                              >
+                                <Plus />
+                              </Button>
+                            )}
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Add to watchlist</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button size="icon" variant="outline">
+                              <Eye />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>View Details</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
           </TableBody>
         </Table>
       </CardContent>
