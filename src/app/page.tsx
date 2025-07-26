@@ -1,5 +1,13 @@
-import StocksList from "@/components/stocks-list";
+import StocksList, { StocksTableSkeleton } from "@/components/stocks-list";
 import WatchList from "@/components/watch-list";
+import { StockItem } from "@/types";
+import { Suspense } from "react";
+
+const StocksListBase = async () => {
+  const stocksResp = await fetch("http://localhost:3000/api/stocks");
+  const stocks: StockItem[] = await stocksResp.json();
+  return <StocksList stocks={stocks} />;
+};
 
 export default function Page() {
   return (
@@ -7,7 +15,9 @@ export default function Page() {
       <div className="container mx-auto px-4 py-6">
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
           <div className="xl:col-span-3 space-y-6">
-            <StocksList />
+            <Suspense fallback={<StocksTableSkeleton />}>
+              <StocksListBase />
+            </Suspense>
           </div>
 
           <div className="xl:col-span-1">
