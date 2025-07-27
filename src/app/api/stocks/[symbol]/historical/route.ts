@@ -3,13 +3,12 @@ import { TimeRange, HistoricalPrice } from "@/types";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { symbol: string } }
+  { params }: { params: Promise<{ symbol: string }> }
 ) {
   try {
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const timeRange = (searchParams.get("timeRange") as TimeRange) || "1M";
-    const symbol = params.symbol.toUpperCase();
-
+    const { symbol } = await params;
     const validTimeRanges: TimeRange[] = ["1D", "1W", "1M", "6M", "1Y"];
     if (!validTimeRanges.includes(timeRange)) {
       return NextResponse.json(
