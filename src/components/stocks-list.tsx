@@ -39,9 +39,9 @@ export default function StocksList({ stocks }: { stocks: StockItem[] }) {
   }, []);
 
   return (
-    <Card className="p-6" id="table">
+    <Card id="table">
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center flex-col md:flex-row gap-4 justify-between">
           <h2 className="text-2xl font-bold text-gray-900">Stocks</h2>
           <SearchInput />
         </div>
