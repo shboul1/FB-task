@@ -3,13 +3,9 @@ import WatchList from "@/components/watch-list";
 import { StockItem } from "@/types";
 import { Suspense } from "react";
 
-const baseUrl = process.env.VERCEL_URL
-  ? process.env.VERCEL_URL
-  : "http://localhost:3000";
-
 export const dynamic = "force-dynamic";
 const StocksListBase = async () => {
-  const stocksResp = await fetch(baseUrl + "/api/stocks");
+  const stocksResp = await fetch("/api/stocks");
   const stocks: StockItem[] = await stocksResp.json();
   return <StocksList stocks={stocks} />;
 };
