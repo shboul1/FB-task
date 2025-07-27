@@ -16,7 +16,6 @@ export const queryClient = new QueryClient({
       gcTime: 5 * 60 * 1000,
     },
   },
-  // Handle useQuery errors
   queryCache: new QueryCache({
     onError: (error: Error) => {
       const message = error?.message || "An error occurred";
