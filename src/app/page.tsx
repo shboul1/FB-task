@@ -3,6 +3,7 @@ import WatchList from "@/components/watch-list";
 import { StockItem } from "@/types";
 import { Suspense } from "react";
 
+export const dyanamic = "force-dynamic";
 const StocksListBase = async () => {
   const stocksResp = await fetch("http://localhost:3000/api/stocks");
   const stocks: StockItem[] = await stocksResp.json();
@@ -21,7 +22,7 @@ export default function Page() {
           </div>
 
           <div className="xl:col-span-1">
-            <div className="sticky top-2">
+            <div className="sticky top-2" id="watchlist">
               <WatchList />
             </div>
           </div>

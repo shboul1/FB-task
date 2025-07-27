@@ -4,6 +4,7 @@ import "./globals.css";
 import ReactQueryProvider from "@/components/providers/tanstack-query-provider";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Tooltip } from "@/components/ui/tooltip";
+import "driver.js/dist/driver.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

@@ -56,7 +56,7 @@ export default function SearchInput() {
   return (
     <>
       <div className="relative w-64">
-        <div className="relative">
+        <div className="relative" id="search-input">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             className="pl-8 w-64 rounded-full"

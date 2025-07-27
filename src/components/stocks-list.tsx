@@ -18,8 +18,7 @@ import {
   formatPrice,
   formatVolume,
 } from "@/lib/utils";
-import { Input } from "./ui/input";
-import { Eye, Plus, Star, X } from "lucide-react";
+import { Eye, Plus, Star } from "lucide-react";
 import { Button } from "./ui/button";
 import {
   Tooltip,
@@ -29,12 +28,18 @@ import {
 import { useStockStore } from "@/lib/store";
 import Link from "next/link";
 import SearchInput from "./search";
+import { useEffect } from "react";
+import { driverObj } from "@/lib/driver";
 
 export default function StocksList({ stocks }: { stocks: StockItem[] }) {
   const { addToWatchlist, watchlist, removeFromWatchlist } = useStockStore();
 
+  useEffect(() => {
+    driverObj.drive();
+  }, []);
+
   return (
-    <Card className="p-6">
+    <Card className="p-6" id="table">
       <CardHeader>
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900">Stocks</h2>
@@ -112,6 +117,7 @@ export default function StocksList({ stocks }: { stocks: StockItem[] }) {
                             size="icon"
                             variant="outline"
                             onClick={() => addToWatchlist(stock)}
+                            id="add-to-watchlist-btn"
                           >
                             <Plus />
                           </Button>
@@ -124,7 +130,11 @@ export default function StocksList({ stocks }: { stocks: StockItem[] }) {
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Link href={`/stock/${stock.id}`}>
-                          <Button size="icon" variant="outline">
+                          <Button
+                            size="icon"
+                            variant="outline"
+                            id="stock-details-btn"
+                          >
                             <Eye />
                           </Button>
                         </Link>
