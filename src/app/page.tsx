@@ -6,7 +6,7 @@ import { Suspense } from "react";
 export const dynamic = "force-dynamic";
 const StocksListBase = async () => {
   const baseUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
+    ? `https://fb-task-eight.vercel.app`
     : "http://localhost:3000";
   const stocksResp = await fetch(`${baseUrl}/api/stocks`);
   const stocks: StockItem[] = await stocksResp.json();
