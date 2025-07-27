@@ -40,5 +40,12 @@ export const driverObj = driver({
         description: "Tap here to add to your watchlist.",
       },
     },
+    {
+      element: "#github-link",
+      popover: {
+        title: "GitHub",
+        description: "View the source code on GitHub.",
+      },
+    },
   ],
 });
